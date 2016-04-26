@@ -50,13 +50,38 @@ char Evento :: getTipo(){
 	return tipo;
 }
 
+class Entidade{
+private:
+    long unsigned int tempChegada;
+	long unsigned int tempLavaInicioServico;
+	long unsigned int tempLavaFinalServico;
+	long unsigned int tempEnceraInicioServico;
+	long unsigned int tempEnceraFinalServico;
+	bool foiLavado;
+	bool foiEncerado;	
+	long unsigned int id;
+	
+public:
+     void settempChegada(long unsigned int vlr){tempChegada = vlr;};
+     long unsigned int gettempChegada(){return tempChegada;};
+	 void settempLavaInicioServico(long unsigned int vlr){tempLavaInicioServico = vlr;};
+     long unsigned int gettempLavaInicioServico(){return tempLavaInicioServico;};
+	 void settempLavaFinalServico(long unsigned int vlr){tempLavaFinalServico = vlr;};
+     long unsigned int gettempLavaFinalServico(){return tempLavaFinalServico;};
+	 void settempEnceraInicioServico(long unsigned int vlr){tempEnceraInicioServico = vlr;};
+     long unsigned int gettempEnceraInicioServico(){return tempEnceraInicioServico;};
+	 void settempEnceraFinalServico(long unsigned int vlr){tempEnceraFinalServico = vlr;};
+     long unsigned int gettempEnceraFinalServico(){return tempEnceraFinalServico;};
+	 void setfoiLavado(bool vlr){foiLavado = vlr;};
+     long unsigned int getfoiLavado(){return foiLavado;};
+	 void setfoiEncerado(bool vlr){foiEncerado = vlr;};
+     long unsigned int getfoiEncerado(){return foiEncerado;}; 
+};
+
 class Simulacao{
 private:
     long unsigned int relogio;
     long unsigned int tempoTotal;
-
-	bool estadoFilaLava;
-	bool estadoFilaEncera;
 
 	long int mediaTEC;
 	long int mediaTSLava;
@@ -72,11 +97,21 @@ private:
 
 	Evento eventoAtual;
 
-
 	bool tecAleatorio;
 	bool tsLavaAleatorio;
 	bool tsEnceraAleatorio;
-
+	
+	long int contLavaOcupado;//AIDIIIII
+	long int contEnceraOcupado;//AIDIIIII
+	
+	long int accFilaLavaOcupada;  //AIDIIIII
+	long int accFilaEnceraOcupada;//AIDIIIII
+	
+	long int accTempFilaLava;  //AIDIIIII
+	long int accTempFilaEncera;//AIDIIIII
+	
+	long int accTempSimulacao;//AIDIIIII
+	
 public:
     void settempoTotal();
     long unsigned int gettempoTotal();
@@ -105,9 +140,75 @@ public:
 	void trataEventoSaidaEncera();
 	void trataEventoFim(){};
 
-
 	void simula();
+	
+	void mediaTamanhoFila(); 			//AIDIIIII
+	void taxaMediaOcupacaoServidor();	//AIDIIIII
+	void tempoMedioFila();				//AIDIIIII
+	void tempoMedioSistema();			//AIDIIIII
+	void contadorEntidades();			//AIDIIIII
 };
+
+//AIDIIIII
+
+void Simulacao :: mediaTamanhoFila(){ 			//AIDIIIII
+
+	mediaTamanhoFilaLava = accFilaLavaOcupada / listaEventos.size();
+	mediaTamanhoFilaEncera = accFilaLavaOcupada / listaEventos.size();
+	
+	cout << "\nNumero medio de entidades na fila de lavacao: " << taxaMediaOcupacaoLava;
+	cout << "\nNumero medio de entidades na fila de enceracao: " << taxaMediaOcupacaoEncera;
+}
+
+void Simulacao :: taxaMediaOcupacaoServidor(){	//AIDIIIII
+		
+	long int contEntidadesSistema = 0;
+	long int taxaMediaOcupacaoLava = 0;
+	long int taxaMediaOcupacaoEncera = 0;
+	
+	std::list<Entidades> listaEntidades;
+
+	for (std::list<Evento>::iterator it=listaEventos.begin(); it != listaEventos.end(); ++it){
+		(*it).setFoiProcessado(true);
+		contEntidadesSistema++;
+		if((*it).gettsEncera()!=0){
+			contEntidadesEncera++;
+		}
+	}
+	
+	taxaMediaOcupacaoLava = contLavaOcupado / contEntidadesSistema;
+	taxaMediaOcupacaoEncera = contEnceraOcupado / contEntidadesEncera;
+	
+	cout << "\nTaxa ocupacao do servidor de lavacao: " << taxaMediaOcupacaoLava;
+	cout << "\nTaxa ocupacao do servidor de enceracao: " << taxaMediaOcupacaoEncera;
+}
+
+void Simulacao :: tempoMedioFila(){ 			//AIDIIIII
+	
+	for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
+		accTempFilaLava += tempLavaInicioServico - tempChegada;
+		accTempFilaEncera += tempEnceraInicioServico - tempLavaFinalServico;
+    }
+	
+	cout << "\nTempo medio de entidade na fila de lavacao: " << accTempFilaLava / listaEntidades.size;
+	cout << "\nTempo medio de entidade na fila de enceracao: " << accTempFilaEncera / listaEntidades.size;
+}
+
+void Simulacao :: tempoMedioSistema(){ 			//AIDIIIII
+	
+	for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
+		accTempSimulacao = tempEnceraFinalServico - tempChegada;
+    }
+	
+	cout << "\nTempo medio de entidade no sistema: " << accTempSimulacao / listaEntidades.size;
+}
+
+void Simulacao :: contadorEntidades(){ 			//AIDIIIII
+	
+	cout << "\nNumero total de entidades no sistema: " << listaEntidades.size;
+}
+
+//AIDIIIII
 
 void Simulacao :: inicializa(){
 
@@ -124,7 +225,17 @@ void Simulacao :: inicializa(){
 
 	filaLavaOcupada = 0;
 	filaEnceraOcupada = 0;
+	
+	contLavaOcupado = 0;  //AIDIIIII
+	contEnceraOcupado = 0;//AIDIIIII
 
+	accFilaLavaOcupada = 0;  //AIDIIIII
+	accFilaEnceraOcupada = 0;//AIDIIIII
+
+	accTempFilaLava = 0;  //AIDIIIII
+	accTempFilaEncera = 0;//AIDIIIII
+	
+	long int accTempSimulacao = 0;//AIDIIIII
 }
 
 void Simulacao :: inicializaEventos(){
@@ -143,7 +254,7 @@ void Simulacao :: avancaTempo(){
 
 	eventoAtual.setTempo(gettempoTotal()+1);
 	system("CLS");
-    cout << "\n\n\nEventos na lista:";
+    cout << "\n\n\nEventos na lista: ";
 
     for (std::list<Evento>::iterator it=listaEventos.begin(); it != listaEventos.end(); ++it){
         if(((*it).getTempo() <= eventoAtual.getTempo())&& !(*it).getFoiProcessado()){
@@ -161,12 +272,14 @@ void Simulacao :: avancaTempo(){
     }
 
 	relogio = eventoAtual.getTempo();
+		
     cout 	<< "\n"
 			<< "\nES(Lava)	: " <<lavaOcupado
 			<< "\nES(Encera)	: " <<enceraOcupado
 			<< "\nEF(Lava)	: " <<filaLavaOcupada
 			<< "\nEF(Encera)	: " <<filaEnceraOcupada;
 	getch();
+	
 }
 
 void Simulacao :: simula(){
@@ -184,6 +297,8 @@ void Simulacao :: simula(){
 			case 'F' : trataEventoFim();break;
 		}
 		avancaTempo();
+		accFilaLavaOcupada += filaLavaOcupada;
+		accFilaEnceraOcupada += filaEnceraOcupada;
 	}
 }
 
@@ -218,7 +333,9 @@ void Simulacao :: trataEventoChegada(){
 	if(!lavaOcupado){
 
 		lavaOcupado = true;
-
+		
+		contLavaOcupado++;//AIDIIIII
+		
 		eventoAux.setTipo('L');
 		if(!tecAleatorio){
 			eventoAux.setTempo(relogio+getmediaTSLava());
@@ -277,6 +394,8 @@ void Simulacao :: trataEventoSaidaLava(){
 
 			enceraOcupado = true;
 
+			contEnceraOcupado++;//AIDIIIII
+			
 			eventoAux.setTipo('E');
 			if(!tecAleatorio){
 				eventoAux.setTempo(relogio+getmediaTSEncera());
@@ -389,6 +508,7 @@ long int Simulacao :: getmediaTSLava(){
 long int Simulacao :: getmediaTSEncera(){
     return mediaTSEncera;
 }
+
 bool Simulacao :: getTECAleatorio(){
     return tecAleatorio;
 }

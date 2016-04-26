@@ -21,6 +21,13 @@ int main()
 
 
     sim.simula();
+	
+	cout << "Result\n\n";
+	mediaTamanhoFila();
+	taxaMediaOcupacaoServidor();
+	tempoMedioFila();
+	tempoMedioSistema();
+	contadorEntidades();
 
     /*
     char resp;
