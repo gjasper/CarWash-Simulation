@@ -3,19 +3,51 @@
 
 #include <iomanip>
 
-#include <queue>
 #include <list>
 #include <conio.h>
 #include <windows.h>
+#include <stdlib.h>
+#include <time.h>
 
 #include "probability_functions.h"
 
+class Entidade{
+private:
+    long unsigned int tempChegada;
+	long unsigned int tempLavaInicioServico;
+	long unsigned int tempLavaFinalServico;
+	long unsigned int tempEnceraInicioServico;
+	long unsigned int tempEnceraFinalServico;
+	bool foiLavado;
+	bool foiEncerado;
+	bool solicitouEnceramento;
+	long unsigned int id;
+
+public:
+     void settempChegada(long unsigned int vlr){tempChegada = vlr;};
+     long unsigned int gettempChegada(){return tempChegada;};
+	 void settempLavaInicioServico(long unsigned int vlr){tempLavaInicioServico = vlr;};
+     long unsigned int gettempLavaInicioServico(){return tempLavaInicioServico;};
+	 void settempLavaFinalServico(long unsigned int vlr){tempLavaFinalServico = vlr;};
+     long unsigned int gettempLavaFinalServico(){return tempLavaFinalServico;};
+	 void settempEnceraInicioServico(long unsigned int vlr){tempEnceraInicioServico = vlr;};
+     long unsigned int gettempEnceraInicioServico(){return tempEnceraInicioServico;};
+	 void settempEnceraFinalServico(long unsigned int vlr){tempEnceraFinalServico = vlr;};
+     long unsigned int gettempEnceraFinalServico(){return tempEnceraFinalServico;};
+	 void setfoiLavado(bool vlr){foiLavado = vlr;};
+     long unsigned int getfoiLavado(){return foiLavado;};
+	 void setfoiEncerado(bool vlr){foiEncerado = vlr;};
+     long unsigned int getfoiEncerado(){return foiEncerado;};
+	 void setsolicitouEnceramento(bool vlr){solicitouEnceramento = vlr;};
+     long unsigned int getsolicitouEnceramento(){return solicitouEnceramento;};
+};
 
 class Evento{
 private:
     long unsigned int tempo;
 	char tipo;
 	bool foiProcessado;
+	long unsigned int idEntidade;
 
 public:
      void setTempo(long int);
@@ -24,6 +56,8 @@ public:
      char getTipo();
      void setFoiProcessado(bool);
      bool getFoiProcessado();
+	 void setidEntidade(long unsigned int vlr){idEntidade = vlr;};
+     long unsigned int getidEntidade(){return idEntidade;};
 };
 
 void Evento :: setFoiProcessado(bool vlr){
@@ -69,9 +103,11 @@ private:
 	long int filaEnceraOcupada;
 
 	std::list<Evento> listaEventos;
+	std::list<Entidade> listaEntidades;
 
 	Evento eventoAtual;
 
+	long unsigned int countEntidades;
 
 	bool tecAleatorio;
 	bool tsLavaAleatorio;
@@ -103,15 +139,37 @@ public:
 	void trataEventoChegada();
 	void trataEventoSaidaLava();
 	void trataEventoSaidaEncera();
-	void trataEventoFim(){};
+	void trataEventoFim();
 
+	void defineTempoChegada();
+	void defineTempoServLava(bool solicitaEnc);
+	void defineTempoServEncera();
+
+    void insereListaEventos(Evento evt);
+    void insereListaEntidades(Entidade ent);
 
 	void simula();
 };
 
+void Simulacao :: insereListaEventos(Evento evt){
+
+    listaEventos.push_front(evt);
+
+}
+
+void Simulacao :: insereListaEntidades(Entidade ent){
+
+    listaEntidades.push_front(ent);
+
+}
+
 void Simulacao :: inicializa(){
 
+	srand (time(NULL));
+
 	relogio = 0;
+
+	countEntidades = 0;
 
     setmediaTEC();
     setmediaTSLava();
@@ -134,39 +192,40 @@ void Simulacao :: inicializaEventos(){
 	eventoAux.setTempo(0);
 	eventoAux.setFoiProcessado(false);
 
-	listaEventos.push_front(eventoAux);
-
+	insereListaEventos(eventoAux);
 
 }
 
 void Simulacao :: avancaTempo(){
 
 	eventoAtual.setTempo(gettempoTotal()+1);
-	system("CLS");
-    cout << "\n\n\nEventos na lista:";
+	//system("CLS");
+    //cout << "\n\n\nEventos na lista:";
 
     for (std::list<Evento>::iterator it=listaEventos.begin(); it != listaEventos.end(); ++it){
         if(((*it).getTempo() <= eventoAtual.getTempo())&& !(*it).getFoiProcessado()){
 			eventoAtual = (*it);
 		}
 
-        cout << "\nTipo: " <<(*it).getTipo()<< "\tTempo: " <<(*it).getTempo()<< "\tFoi processado: " <<(*it).getFoiProcessado();
+        //cout << "\nTipo: " <<(*it).getTipo()<< "\tTempo: " <<(*it).getTempo()<< "\tFoi processado: " <<(*it).getFoiProcessado();
     }
 
 	for (std::list<Evento>::iterator it=listaEventos.begin(); it != listaEventos.end(); ++it){
 		if((eventoAtual.getTempo() == (*it).getTempo())&&(eventoAtual.getTipo() == (*it).getTipo())){
 			(*it).setFoiProcessado(true);
-			cout << "\n\nEvento " <<(*it).getTipo()<<","<<(*it).getTempo()<<" foi processado";
+			//cout << "\n\nEvento " <<(*it).getTipo()<<","<<(*it).getTempo()<<" sera processado";
 		}
     }
 
+
 	relogio = eventoAtual.getTempo();
-    cout 	<< "\n"
+    /*cout 	<< "\n"
 			<< "\nES(Lava)	: " <<lavaOcupado
 			<< "\nES(Encera)	: " <<enceraOcupado
 			<< "\nEF(Lava)	: " <<filaLavaOcupada
 			<< "\nEF(Encera)	: " <<filaEnceraOcupada;
 	getch();
+	*/
 }
 
 void Simulacao :: simula(){
@@ -181,39 +240,44 @@ void Simulacao :: simula(){
 			case 'C' : trataEventoChegada();break;
 			case 'L' : trataEventoSaidaLava();break;
 			case 'E' : trataEventoSaidaEncera();break;
-			case 'F' : trataEventoFim();break;
 		}
 		avancaTempo();
 	}
+
+	trataEventoFim();
+
 }
 
 void Simulacao :: trataEventoInicio(){
 
 	Evento eventoAux;
+	Entidade entidadeAux;
+
+	long int tempChegadaAux;
 
 	eventoAux.setTipo('F');
 	eventoAux.setTempo(gettempoTotal());
 	eventoAux.setFoiProcessado(false);
 
-	listaEventos.push_front(eventoAux);
-
+	insereListaEventos(eventoAux);
 
 	eventoAux.setTipo('C');
 	if(!tecAleatorio){
-		eventoAux.setTempo(relogio+getmediaTEC());
+		tempChegadaAux = relogio+getmediaTEC();
 	}else{
-		eventoAux.setTempo(relogio+distribuicaoNormal(getmediaTEC()));
- 	    cout << "\n\nEvento C tem tempo aleatório: "<< eventoAux.getTempo()<<"\n\n";
+		tempChegadaAux = relogio+distribuicaoNormal(getmediaTEC());
 	}
+	eventoAux.setTempo(tempChegadaAux);
 	eventoAux.setFoiProcessado(false);
-
-	listaEventos.push_front(eventoAux);
-
+	insereListaEventos(eventoAux);
 }
 
 void Simulacao :: trataEventoChegada(){
 
 	Evento eventoAux;
+	long int tempChegadaAux, tempSaidaLavaAux;
+
+	defineTempoChegada();
 
 	if(!lavaOcupado){
 
@@ -221,13 +285,14 @@ void Simulacao :: trataEventoChegada(){
 
 		eventoAux.setTipo('L');
 		if(!tecAleatorio){
-			eventoAux.setTempo(relogio+getmediaTSLava());
+			tempSaidaLavaAux = relogio+getmediaTSLava();
 		}else{
 			//
 		}
-		eventoAux.setFoiProcessado(false);
 
-		listaEventos.push_front(eventoAux);
+		eventoAux.setTempo(tempSaidaLavaAux);
+		eventoAux.setFoiProcessado(false);
+		insereListaEventos(eventoAux);
 
 	}else{
 		filaLavaOcupada++;
@@ -236,21 +301,48 @@ void Simulacao :: trataEventoChegada(){
 
 	eventoAux.setTipo('C');
 	if(!tecAleatorio){
-		eventoAux.setTempo(relogio+getmediaTEC());
+		tempChegadaAux = relogio+getmediaTEC();
 	}else{
-		eventoAux.setTempo(relogio+distribuicaoNormal(getmediaTEC()));
+		tempChegadaAux = relogio+distribuicaoNormal(getmediaTEC());
  	    cout << "\n\nEvento C tem tempo aleatório: "<< eventoAux.getTempo()<<"\n\n";
 	}
+
+
+	eventoAux.setTempo(tempChegadaAux);
 	eventoAux.setFoiProcessado(false);
+	insereListaEventos(eventoAux);
+}
 
+void Simulacao :: defineTempoChegada(){
+	Entidade entidadeAux;
 
-	listaEventos.push_front(eventoAux);
+	countEntidades++;
+	entidadeAux.settempChegada(relogio);
+	entidadeAux.settempLavaInicioServico(0);
+	entidadeAux.settempLavaFinalServico(0);
+	entidadeAux.settempEnceraInicioServico(0);
+	entidadeAux.settempEnceraFinalServico(0);
+
+	entidadeAux.setfoiLavado(false);
+	entidadeAux.setfoiEncerado(false);
+	entidadeAux.setsolicitouEnceramento(false);
+	insereListaEntidades(entidadeAux);
 
 }
 
 void Simulacao :: trataEventoSaidaLava(){
 
 	Evento eventoAux;
+	long unsigned int numSorteado = rand() % 100;
+
+	long int tempSaidaLavaAux;
+
+	if(numSorteado<60){
+		defineTempoServLava(false);
+	}else{
+		defineTempoServLava(true);
+	}
+
 
 	if(filaLavaOcupada){
 
@@ -258,19 +350,18 @@ void Simulacao :: trataEventoSaidaLava(){
 
 		eventoAux.setTipo('L');
 		if(!tecAleatorio){
-			eventoAux.setTempo(relogio+getmediaTSLava());
+			tempSaidaLavaAux = relogio+getmediaTSLava();
 		}else{
 			//funcao de numero aleatorio
 		}
-        eventoAux.setFoiProcessado(false);
 
-		listaEventos.push_front(eventoAux);
+		eventoAux.setTempo(tempSaidaLavaAux);
+        eventoAux.setFoiProcessado(false);
+		insereListaEventos(eventoAux);
 
 	}else{
 		lavaOcupado = 0;
 	}
-
-	long unsigned int numSorteado = 59;
 
 	if(numSorteado<60){
 		if(!enceraOcupado){
@@ -285,7 +376,7 @@ void Simulacao :: trataEventoSaidaLava(){
 			}
 			eventoAux.setFoiProcessado(false);
 
-			listaEventos.push_front(eventoAux);
+			insereListaEventos(eventoAux);
 
 		}else{
 			filaEnceraOcupada++;
@@ -294,9 +385,45 @@ void Simulacao :: trataEventoSaidaLava(){
 
 }
 
+void Simulacao :: defineTempoServLava(bool solicitaEnc){
+
+	Entidade entidadeAtual, entidadeUltimoLavado;
+
+	entidadeAtual.settempChegada(tempoTotal+1);
+	entidadeUltimoLavado.settempLavaFinalServico(0);
+
+	long int tempoAux = tempoTotal+1;
+
+	for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
+        if(((*it).gettempChegada() <= entidadeAtual.gettempChegada())&& !(*it).getfoiLavado()){
+			entidadeAtual = (*it);
+		}
+
+		if((*it).gettempLavaFinalServico() >= entidadeUltimoLavado.gettempLavaFinalServico()){
+			entidadeUltimoLavado = (*it);
+		}
+	}
+
+	for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
+		if(entidadeAtual.gettempChegada() == (*it).gettempChegada()){
+			(*it).setfoiLavado(true);
+			if(solicitaEnc)(*it).setsolicitouEnceramento(true);
+			(*it).settempLavaFinalServico(relogio);
+
+			if(entidadeUltimoLavado.gettempLavaFinalServico() > (*it).gettempChegada()){
+				(*it).settempLavaInicioServico(entidadeUltimoLavado.gettempLavaFinalServico());
+			}else{
+				(*it).settempLavaInicioServico((*it).gettempChegada());
+			}
+		}
+    }
+}
+
 void Simulacao :: trataEventoSaidaEncera(){
 
 	Evento eventoAux;
+
+	defineTempoServEncera();
 
 	if(filaEnceraOcupada){
 
@@ -310,13 +437,71 @@ void Simulacao :: trataEventoSaidaEncera(){
 		}
         eventoAux.setFoiProcessado(false);
 
-		listaEventos.push_front(eventoAux);
+		insereListaEventos(eventoAux);
 
 	}else{
 		enceraOcupado = 0;
 	}
 
 
+}
+
+void Simulacao :: defineTempoServEncera(){
+
+	Entidade entidadeAtual, entidadeUltimoEncerado;
+
+	entidadeAtual.settempChegada(tempoTotal+1);
+	entidadeUltimoEncerado.settempEnceraFinalServico(0);
+
+	long int tempoAux = tempoTotal+1;
+
+	for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
+        if(((*it).gettempChegada() <= entidadeAtual.gettempChegada())&& (!(*it).getfoiEncerado())&&((*it).getsolicitouEnceramento())){
+			entidadeAtual = (*it);
+		}
+
+		if(((*it).gettempEnceraFinalServico() >= entidadeUltimoEncerado.gettempEnceraFinalServico())&&((*it).getsolicitouEnceramento())){
+			entidadeUltimoEncerado = (*it);
+		}
+	}
+
+	for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
+		if(entidadeAtual.gettempChegada() == (*it).gettempChegada()){
+			(*it).setfoiEncerado(true);
+			(*it).settempEnceraFinalServico(relogio);
+
+			if(entidadeUltimoEncerado.gettempEnceraFinalServico() < (*it).gettempChegada()){
+				(*it).settempEnceraInicioServico(entidadeUltimoEncerado.gettempEnceraFinalServico());
+			}else{
+				(*it).settempEnceraInicioServico((*it).gettempChegada());
+			}
+		}
+    }
+}
+
+void Simulacao :: trataEventoFim(){
+
+    system("CLS");
+
+	cout<<"\n    TChegada |"
+		<<" TIniServ Lava |"
+		<<" TFimServ Lava |"
+		<<" TIniServ Ence |"
+		<<" TFimServ Ence |"
+		<<" Solicito Ence |\n";
+
+
+    for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
+        cout<<"\n\t"<<(*it).gettempChegada()
+            <<"\t"<<(*it).gettempLavaInicioServico()
+            <<"\t"<<(*it).gettempLavaFinalServico()
+            <<"\t"<<(*it).gettempEnceraInicioServico()
+            <<"\t"<<(*it).gettempEnceraFinalServico()
+            <<"\t"<<(*it).getsolicitouEnceramento();
+
+    }
+
+	getch();
 }
 
 void Simulacao :: setTECAleatorio(){
@@ -326,7 +511,6 @@ void Simulacao :: setTECAleatorio(){
 	if (resp == 'D')
         tecAleatorio = false;
 	else{
- 	    cout << "\n\nEvento C tem tempo aleatório\n\n";
 		tecAleatorio = true;
 	}
 
@@ -389,6 +573,7 @@ long int Simulacao :: getmediaTSLava(){
 long int Simulacao :: getmediaTSEncera(){
     return mediaTSEncera;
 }
+
 bool Simulacao :: getTECAleatorio(){
     return tecAleatorio;
 }
