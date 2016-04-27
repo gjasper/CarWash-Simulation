@@ -243,7 +243,6 @@ void Simulacao :: simula(){
 		}
 		avancaTempo();
 	}
-
 	trataEventoFim();
 
 }
@@ -334,13 +333,13 @@ void Simulacao :: trataEventoSaidaLava(){
 
 	Evento eventoAux;
 	long unsigned int numSorteado = rand() % 100;
-
+	
 	long int tempSaidaLavaAux;
 
 	if(numSorteado<60){
-		defineTempoServLava(false);
-	}else{
 		defineTempoServLava(true);
+	}else{
+		defineTempoServLava(false);
 	}
 
 
@@ -375,7 +374,6 @@ void Simulacao :: trataEventoSaidaLava(){
 				//funcao de numero aleatorio
 			}
 			eventoAux.setFoiProcessado(false);
-
 			insereListaEventos(eventoAux);
 
 		}else{
@@ -447,34 +445,34 @@ void Simulacao :: trataEventoSaidaEncera(){
 }
 
 void Simulacao :: defineTempoServEncera(){
-
+	 
 	Entidade entidadeAtual, entidadeUltimoEncerado;
-
-	entidadeAtual.settempChegada(tempoTotal+1);
-	entidadeUltimoEncerado.settempEnceraFinalServico(0);
-
-	long int tempoAux = tempoTotal+1;
-
+	entidadeAtual.settempLavaFinalServico(tempoTotal+1);
+	entidadeUltimoEncerado.settempLavaFinalServico(0);
+	
 	for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
-        if(((*it).gettempChegada() <= entidadeAtual.gettempChegada())&& (!(*it).getfoiEncerado())&&((*it).getsolicitouEnceramento())){
+        if(((*it).gettempLavaFinalServico() < entidadeAtual.gettempLavaFinalServico())&&(!(*it).getfoiEncerado())&&((*it).getsolicitouEnceramento())){
 			entidadeAtual = (*it);
 		}
-
-		if(((*it).gettempEnceraFinalServico() >= entidadeUltimoEncerado.gettempEnceraFinalServico())&&((*it).getsolicitouEnceramento())){
+		
+		if((*it).gettempEnceraFinalServico() > entidadeUltimoEncerado.gettempEnceraFinalServico()){
 			entidadeUltimoEncerado = (*it);
 		}
-	}
-
+    }
+	
 	for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
-		if(entidadeAtual.gettempChegada() == (*it).gettempChegada()){
+        if(((*it).gettempChegada() == entidadeAtual.gettempChegada()) && ((*it).gettempLavaInicioServico() == entidadeAtual.gettempLavaInicioServico())){
 			(*it).setfoiEncerado(true);
 			(*it).settempEnceraFinalServico(relogio);
-
-			if(entidadeUltimoEncerado.gettempEnceraFinalServico() < (*it).gettempChegada()){
+			
+			
+			if(entidadeUltimoEncerado.gettempEnceraFinalServico() > (*it).gettempLavaFinalServico()){
+				
+				
 				(*it).settempEnceraInicioServico(entidadeUltimoEncerado.gettempEnceraFinalServico());
 			}else{
-				(*it).settempEnceraInicioServico((*it).gettempChegada());
-			}
+				(*it).settempEnceraInicioServico((*it).gettempLavaFinalServico());
+			}			
 		}
     }
 }
@@ -488,7 +486,7 @@ void Simulacao :: trataEventoFim(){
 		<<" TFimServ Lava |"
 		<<" TIniServ Ence |"
 		<<" TFimServ Ence |"
-		<<" Solicito Ence |\n";
+		<<" Solicitou Enceramento |\n";
 
 
     for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
