@@ -1,12 +1,10 @@
-#ifndef PROBABILITY_FUNTIONS_H_INCLUDED
-#define PROBABILITY_FUNTIONS_H_INCLUDED
-
-#include <math.h>
-
 //Uniforme: S= Minimo + (Maximo - Minimo)*AleatorioEntre0e1
 //Triangular: x(é saida da uniforme) -- SE (Min<= X < Moda) = 2(x-Min)/(Max-Min)*(Moda-Min) || SE (X = Moda) = 2/(Max-Min) || SE (Moda< X <= Max) = 2(Max-x)/(Max-Min)*(Moda-Min)
-//Normal: 	S = (1/sqrt(2*pi*desviopadrão^2))*exp(-((x-media)^2)/(2*desviopadrao^2))
+//Normal: S = (1/sqrt(2*pi*desviopadrão^2))*exp(-((x-media)^2)/(2*desviopadrao^2))
 //Exponencial S = (1/media)*exp(-x/media)
+
+
+#include <time.h>
 
 float distribuicaoUniforme (float minimo, float maximo){
     float x = 0, saida = 0;
@@ -31,19 +29,13 @@ float distribuicaoTriangular (float minimo, float maximo, float moda){
 float distribuicaoNormal (float media){
     float x = 0, saida = 0;
         x = rand()%101; //aleatorio entre 0.00 e 1.00
-        saida = (1/media)*exp(-(x/media));
+        //saida = (1/media)*exp(-(x/media));
     return saida;
 }
 
-/*
 float distribuicaoExponencial (float media, float desviopadrao){
     float x = 0, saida = 0;
         x = rand()%101; //aleatorio entre 0.00 e 1.00
-        saida = (1/sqrt(2*3.1415*(desviopadrao^2)))*exp(-((x-media)^2)/(2*(desviopadrao^2)));
+        //saida = (1/sqrt(2*3.1415*(desviopadrao^2)))*exp(-((x-media)^2)/(2*(desviopadrao^2)));
     return saida;
 }
-*/
-
-
-
-#endif

@@ -10,12 +10,6 @@ int main()
 
     sim.settempoTotal();
     sim.setTECAleatorio();
-
-
-	cout << "\n\ntecAleatorio "<<sim.getTECAleatorio();
-	getch();
-
-
     sim.setTSLavaAleatorio();
     sim.setTSEnceraAleatorio();
 
