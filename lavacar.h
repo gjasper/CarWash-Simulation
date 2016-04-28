@@ -6,10 +6,9 @@
 #include <list>
 #include <conio.h>
 #include <windows.h>
-#include <stdlib.h>
 #include <time.h>
 
-#include "probability_functions.h"
+#include "funcoes_probabilidade.h"
 
 class Entidade{
 private:
@@ -264,7 +263,7 @@ void Simulacao :: trataEventoInicio(){
 	if(!tecAleatorio){
 		tempChegadaAux = relogio+getmediaTEC();
 	}else{
-		tempChegadaAux = relogio+distribuicaoNormal(getmediaTEC());
+		tempChegadaAux = relogio+dist_normal(getmediaTEC());
 	}
 	eventoAux.setTempo(tempChegadaAux);
 	eventoAux.setFoiProcessado(false);
@@ -283,10 +282,10 @@ void Simulacao :: trataEventoChegada(){
 		lavaOcupado = true;
 
 		eventoAux.setTipo('L');
-		if(!tecAleatorio){
+		if(!tsLavaAleatorio){
 			tempSaidaLavaAux = relogio+getmediaTSLava();
 		}else{
-			//
+			tempSaidaLavaAux = relogio+dist_normal(getmediaTSLava());
 		}
 
 		eventoAux.setTempo(tempSaidaLavaAux);
@@ -302,8 +301,7 @@ void Simulacao :: trataEventoChegada(){
 	if(!tecAleatorio){
 		tempChegadaAux = relogio+getmediaTEC();
 	}else{
-		tempChegadaAux = relogio+distribuicaoNormal(getmediaTEC());
- 	    cout << "\n\nEvento C tem tempo aleatório: "<< eventoAux.getTempo()<<"\n\n";
+		tempChegadaAux = relogio+dist_normal(getmediaTEC());
 	}
 
 
@@ -333,7 +331,7 @@ void Simulacao :: trataEventoSaidaLava(){
 
 	Evento eventoAux;
 	long unsigned int numSorteado = rand() % 100;
-	
+
 	long int tempSaidaLavaAux;
 
 	if(numSorteado<60){
@@ -348,10 +346,10 @@ void Simulacao :: trataEventoSaidaLava(){
 		filaLavaOcupada--;
 
 		eventoAux.setTipo('L');
-		if(!tecAleatorio){
+		if(!tsLavaAleatorio){
 			tempSaidaLavaAux = relogio+getmediaTSLava();
 		}else{
-			//funcao de numero aleatorio
+			tempSaidaLavaAux = relogio+dist_normal(getmediaTSLava());
 		}
 
 		eventoAux.setTempo(tempSaidaLavaAux);
@@ -368,16 +366,17 @@ void Simulacao :: trataEventoSaidaLava(){
 			enceraOcupado = true;
 
 			eventoAux.setTipo('E');
-			if(!tecAleatorio){
+			if(!tsEnceraAleatorio){
 				eventoAux.setTempo(relogio+getmediaTSEncera());
 			}else{
-				//funcao de numero aleatorio
+				eventoAux.setTempo(relogio+dist_normal(getmediaTSEncera()));
 			}
 			eventoAux.setFoiProcessado(false);
 			insereListaEventos(eventoAux);
 
 		}else{
 			filaEnceraOcupada++;
+
 		}
 	}
 
@@ -426,12 +425,12 @@ void Simulacao :: trataEventoSaidaEncera(){
 	if(filaEnceraOcupada){
 
 		filaEnceraOcupada--;
-
+		
 		eventoAux.setTipo('E');
-		if(!tecAleatorio){
+		if(!tsEnceraAleatorio){
 			eventoAux.setTempo(relogio+getmediaTSEncera());
 		}else{
-			//funcao de numero aleatorio
+			eventoAux.setTempo(relogio+dist_normal(getmediaTSEncera()));
 		}
         eventoAux.setFoiProcessado(false);
 
@@ -440,39 +439,37 @@ void Simulacao :: trataEventoSaidaEncera(){
 	}else{
 		enceraOcupado = 0;
 	}
-
-
 }
 
 void Simulacao :: defineTempoServEncera(){
-	 
+
 	Entidade entidadeAtual, entidadeUltimoEncerado;
 	entidadeAtual.settempLavaFinalServico(tempoTotal+1);
 	entidadeUltimoEncerado.settempLavaFinalServico(0);
-	
+
 	for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
         if(((*it).gettempLavaFinalServico() < entidadeAtual.gettempLavaFinalServico())&&(!(*it).getfoiEncerado())&&((*it).getsolicitouEnceramento())){
 			entidadeAtual = (*it);
 		}
-		
+
 		if((*it).gettempEnceraFinalServico() > entidadeUltimoEncerado.gettempEnceraFinalServico()){
 			entidadeUltimoEncerado = (*it);
 		}
     }
-	
+
 	for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
         if(((*it).gettempChegada() == entidadeAtual.gettempChegada()) && ((*it).gettempLavaInicioServico() == entidadeAtual.gettempLavaInicioServico())){
 			(*it).setfoiEncerado(true);
 			(*it).settempEnceraFinalServico(relogio);
-			
-			
+
+
 			if(entidadeUltimoEncerado.gettempEnceraFinalServico() > (*it).gettempLavaFinalServico()){
-				
-				
+
+
 				(*it).settempEnceraInicioServico(entidadeUltimoEncerado.gettempEnceraFinalServico());
 			}else{
 				(*it).settempEnceraInicioServico((*it).gettempLavaFinalServico());
-			}			
+			}
 		}
     }
 }
