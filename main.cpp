@@ -5,28 +5,22 @@ using namespace std;
 
 int main()
 {
+    system("MODE con cols=130 lines=300");
+
 
     Simulacao sim;
 
-    sim.settempoTotal();
-    sim.setTECAleatorio();
-    sim.setTSLavaAleatorio();
-    sim.setTSEnceraAleatorio();
-
-
-    sim.simula();
-
-    /*
     char resp;
 
     while(1>0){
-
-        do{ resp = getch(); }while (resp < '1' || resp > '6');
+        cout << "\n\n\t\t1. Simular"
+             << "\n\n\t\t2. Sair";
+        do{ resp = getch(); }while (resp < '1' || resp > '2');
         system("cls");
         switch (resp){
-            case '1': sim.inicializa();break;
-            case '6': return 1;
+            case '1': sim.simula();break;
+            case '2': return 1;
         }
     }
-    */
+
 }
