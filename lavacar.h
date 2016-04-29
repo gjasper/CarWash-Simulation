@@ -1,14 +1,21 @@
 #ifndef LAVACAR_H_INCLUDED
 #define LAVACAR_H_INCLUDED
 
-#include <iomanip>
+//Seen by Ayslan Zoletti at 10:43Seen by Fernando (pau no cu) Gaya at 10:44
 
+
+#include <iomanip>
 #include <list>
 #include <conio.h>
 #include <windows.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "funcoes_probabilidade.h"
+
+
+#define TAM 100000
+
 
 class Entidade{
 private:
@@ -108,10 +115,24 @@ private:
 
 	long unsigned int countEntidades;
 
+	float tempoPause;
+	
 	bool tecAleatorio;
 	bool tsLavaAleatorio;
 	bool tsEnceraAleatorio;
-
+	//1
+	float accFilaLavaOcupada;
+	float accFilaEnceraOcupada;
+	//2
+	float contLavaOcupado;
+	float contEnceraOcupado;
+	float contEntidadesSistema;
+	float contEntidadesEncera;
+	//3
+	float accTempFilaLava;
+	float accTempFilaEncera;
+	//4
+	float accTempSimulacao;
 public:
     void settempoTotal();
     long unsigned int gettempoTotal();
@@ -148,6 +169,21 @@ public:
     void insereListaEntidades(Entidade ent);
 
 	void simula();
+	//1
+	void mediaTamanhoFila();
+	//2
+	void taxaMediaOcupacaoServidor();
+	//3
+	void tempoMedioFila();
+	//4
+	void tempoMedioSistema();
+	//5
+	void contadorEntidades();
+	//animacao
+	void animacao();
+	void pause (float delay1);
+	void gotoxy(int x, int y);
+	void settempoPause();
 };
 
 void Simulacao :: insereListaEventos(Evento evt){
@@ -158,30 +194,56 @@ void Simulacao :: insereListaEventos(Evento evt){
 
 void Simulacao :: insereListaEntidades(Entidade ent){
 
-    listaEntidades.push_front(ent);
+    listaEntidades.push_back(ent);
 
 }
 
 void Simulacao :: inicializa(){
 
+	system("CLS");
+
 	srand (time(NULL));
 
+	listaEntidades.clear();
+	listaEventos.clear();
+	
 	relogio = 0;
 
 	countEntidades = 0;
+	
+	settempoTotal();
+    setTECAleatorio();
+    setTSLavaAleatorio();
+    setTSEnceraAleatorio();
 
     setmediaTEC();
     setmediaTSLava();
     setmediaTSEncera();
 
+	settempoPause();
+	
 	inicializaEventos();
+	
+
 
 	lavaOcupado = false;
 	enceraOcupado = false;
 
 	filaLavaOcupada = 0;
 	filaEnceraOcupada = 0;
-
+	//1
+	accFilaLavaOcupada = 0;
+	accFilaEnceraOcupada = 0;
+	//2
+	contLavaOcupado = 0;
+	contEnceraOcupado = 0;
+	contEntidadesSistema = 0;
+	contEntidadesEncera = 0;
+	//3
+	accTempFilaLava = 0;
+	accTempFilaEncera = 0;
+	//4
+	accTempSimulacao = 0;
 }
 
 void Simulacao :: inicializaEventos(){
@@ -228,11 +290,10 @@ void Simulacao :: avancaTempo(){
 }
 
 void Simulacao :: simula(){
-
+		
 	inicializa();
 	avancaTempo();
-
-
+	
 	while(eventoAtual.getTipo()!='F'){
 		switch (eventoAtual.getTipo()) {
 			case 'I' : trataEventoInicio();break;
@@ -241,9 +302,12 @@ void Simulacao :: simula(){
 			case 'E' : trataEventoSaidaEncera();break;
 		}
 		avancaTempo();
+		accFilaLavaOcupada += filaLavaOcupada;
+		accFilaEnceraOcupada += filaEnceraOcupada;
+		animacao();
 	}
 	trataEventoFim();
-
+	
 }
 
 void Simulacao :: trataEventoInicio(){
@@ -330,8 +394,8 @@ void Simulacao :: defineTempoChegada(){
 void Simulacao :: trataEventoSaidaLava(){
 
 	Evento eventoAux;
-	long unsigned int numSorteado = rand() % 100;
-
+	//long unsigned int numSorteado = rand() % 100;
+	long unsigned int numSorteado = 27;
 	long int tempSaidaLavaAux;
 
 	if(numSorteado<60){
@@ -425,7 +489,7 @@ void Simulacao :: trataEventoSaidaEncera(){
 	if(filaEnceraOcupada){
 
 		filaEnceraOcupada--;
-		
+
 		eventoAux.setTipo('E');
 		if(!tsEnceraAleatorio){
 			eventoAux.setTempo(relogio+getmediaTSEncera());
@@ -479,8 +543,8 @@ void Simulacao :: trataEventoFim(){
     system("CLS");
 
 	cout<<"\n    TChegada |"
-		<<" TIniServ Lava |"
-		<<" TFimServ Lava |"
+		<<"   TIniServ Lava |"
+		<<"  TFimServ Lava  |"
 		<<" TIniServ Ence |"
 		<<" TFimServ Ence |"
 		<<" Solicitou Enceramento |\n";
@@ -488,15 +552,23 @@ void Simulacao :: trataEventoFim(){
 
     for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
         cout<<"\n\t"<<(*it).gettempChegada()
-            <<"\t"<<(*it).gettempLavaInicioServico()
-            <<"\t"<<(*it).gettempLavaFinalServico()
-            <<"\t"<<(*it).gettempEnceraInicioServico()
-            <<"\t"<<(*it).gettempEnceraFinalServico()
-            <<"\t"<<(*it).getsolicitouEnceramento();
+            <<"\t\t"<<(*it).gettempLavaInicioServico()
+            <<"\t\t"<<(*it).gettempLavaFinalServico()
+            <<"\t\t"<<(*it).gettempEnceraInicioServico()
+            <<"\t\t"<<(*it).gettempEnceraFinalServico()
+            <<"\t\t   "<<(*it).getsolicitouEnceramento();
 
     }
-
+	
+	mediaTamanhoFila();
+	taxaMediaOcupacaoServidor();
+	tempoMedioFila();
+	tempoMedioSistema();
+    contadorEntidades();
+	
 	getch();
+	system("CLS");
+	
 }
 
 void Simulacao :: setTECAleatorio(){
@@ -557,6 +629,13 @@ void Simulacao :: setmediaTSEncera(){
 	cin >> mediaTSEncera;
 }
 
+void Simulacao :: settempoPause(){
+
+	cout << "\n\n\n\tDefina a velocidade da animacao [0.2 - 1.2]: ";
+	cin >> tempoPause;
+
+}
+
 long int Simulacao :: getmediaTEC(){
     return mediaTEC;
 }
@@ -581,5 +660,136 @@ bool Simulacao :: getTSEnceraAleatorio (){
     return tsEnceraAleatorio;
 }
 
+//1
+void Simulacao :: mediaTamanhoFila(){
+	cout << "\n\nNumero medio de entidades na fila de lava: " << (accFilaLavaOcupada / listaEventos.size());
+	cout << "\nNumero medio de entidades na fila de encera: " << (accFilaEnceraOcupada / listaEventos.size()) << "\n";
+}
+
+//2
+void Simulacao :: taxaMediaOcupacaoServidor(){
+	float accTempoOciosoLava = 0;
+	float accTempoOciosoEncera = 0;
+
+	Entidade entidadeAnterior;
+	entidadeAnterior.settempLavaFinalServico(0);
+	entidadeAnterior.settempEnceraFinalServico(0);
+	for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
+		if((*it).gettempLavaInicioServico() > entidadeAnterior.gettempLavaFinalServico()){
+			accTempoOciosoLava += (*it).gettempLavaInicioServico() - entidadeAnterior.gettempLavaFinalServico();
+			//cout << "\n (*it): " << (*it).gettempLavaInicioServico() << " Anterior: "<< entidadeAnterior.gettempLavaFinalServico();
+		}
+		if((*it).gettempEnceraInicioServico() > entidadeAnterior.gettempEnceraFinalServico()){
+			accTempoOciosoEncera += (*it).gettempEnceraInicioServico() - entidadeAnterior.gettempEnceraFinalServico();
+		}
+		entidadeAnterior = (*it);
+	}
+
+	cout << "\nTaxa ocupacao do servidor de lava: " << 100-(100*accTempoOciosoLava / tempoTotal);
+	cout << "\nTaxa ocupacao do servidor de encera: " << 100-(100*accTempoOciosoEncera / tempoTotal);
+}
+
+//3
+void Simulacao :: tempoMedioFila(){
+
+	for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
+		if((*it).gettempLavaInicioServico() > (*it).gettempChegada()){
+			accTempFilaLava += (*it).gettempLavaInicioServico() - (*it).gettempChegada();
+		}
+		if((*it).gettempEnceraInicioServico() > (*it).gettempLavaFinalServico()){
+			accTempFilaEncera += (*it).gettempEnceraInicioServico() - (*it).gettempLavaFinalServico();
+		}
+	}
+
+	cout << "\n\nTempo medio de entidade na fila de lava: " << accTempFilaLava / listaEntidades.size();
+	cout << "\nTempo medio de entidade na fila de encera: " << accTempFilaEncera / listaEntidades.size();
+}
+
+//4
+void Simulacao :: tempoMedioSistema(){
+
+	for (std::list<Entidade>::iterator it=listaEntidades.begin(); it != listaEntidades.end(); ++it){
+		if((*it).gettempEnceraFinalServico() > (*it).gettempChegada()){
+		//	accTempSimulacao += (*it).gettempEnceraFinalServico() - (*it).gettempChegada();
+			accTempSimulacao += (*it).gettempLavaFinalServico() - (*it).gettempChegada();
+		}if((*it).gettempEnceraFinalServico()!=0){
+			accTempSimulacao += (*it).gettempEnceraFinalServico() - (*it).gettempLavaFinalServico();
+		}
+	}
+
+	cout << "\n\nTempo medio da entidade no sistema: " << accTempSimulacao / listaEntidades.size() << "\n";
+}
+
+void Simulacao :: contadorEntidades(){ 			//AIDIIIII
+
+	cout << "\nNumero total de entidades no sistema: " << listaEntidades.size() << "\n\n";
+
+}
+
+//ANIMACAO
+void Simulacao :: animacao(){
+
+    char vetAnimaLava[TAM];
+    char vetAnimaEncera[TAM];
+
+
+    system("cls");
+    gotoxy(9,1);
+    cout << "QTD LAVA: " << filaLavaOcupada;
+    gotoxy(9,2);
+    cout << "        _________";
+    gotoxy(9,3);
+    cout << "LAVACAO ";
+    if(filaLavaOcupada!=0){
+        cout << "# |8-8) #";
+    }else{
+        cout << "#       #";
+    }
+    for(int i = 0; i < (filaLavaOcupada-1); i++){
+        vetAnimaLava[i] = 'x';
+        if(vetAnimaLava[i]=='x'){
+            gotoxy(13,(i+5));
+            cout << "\t  |8-8)\n";
+        }
+    }
+    gotoxy(28,1);
+    cout << "QTD ENCERA: " << filaEnceraOcupada;
+    gotoxy(28,2);
+    cout << "            _________";
+    gotoxy(28,3);
+    cout << "ENCERAMENTO ";
+    if(filaEnceraOcupada!=0){
+        cout << "# |8-8) #";
+    }else{
+        cout << "#       #";
+    }
+    for(int k = 0; k < (filaEnceraOcupada-1); k++){
+        vetAnimaEncera[k] = 'x';
+        if(vetAnimaEncera[k]=='x'){
+            gotoxy(28,(k+5));
+            cout << "\t         |8-8)\n";
+        }
+    }
+        //cout << "<8-8# ";
+    pause(tempoPause);
+}
+
+void Simulacao :: pause (float delay1) {
+
+   if (delay1<0.001) return; // pode ser ajustado e/ou evita-se valores negativos.
+
+   float inst1=0, inst2=0;
+
+   inst1 = (float)clock()/(float)CLOCKS_PER_SEC;
+
+   while (inst2-inst1<delay1) inst2 = (float)clock()/(float)CLOCKS_PER_SEC;
+
+   return;
+
+}
+
+void Simulacao :: gotoxy(int x, int y){
+     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE),(COORD){x-1,y-1});
+}
 
 #endif
