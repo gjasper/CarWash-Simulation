@@ -116,7 +116,7 @@ private:
 	long unsigned int countEntidades;
 
 	float tempoPause;
-	
+
 	bool tecAleatorio;
 	bool tsLavaAleatorio;
 	bool tsEnceraAleatorio;
@@ -206,11 +206,11 @@ void Simulacao :: inicializa(){
 
 	listaEntidades.clear();
 	listaEventos.clear();
-	
+
 	relogio = 0;
 
 	countEntidades = 0;
-	
+
 	settempoTotal();
     setTECAleatorio();
     setTSLavaAleatorio();
@@ -221,9 +221,9 @@ void Simulacao :: inicializa(){
     setmediaTSEncera();
 
 	settempoPause();
-	
+
 	inicializaEventos();
-	
+
 
 
 	lavaOcupado = false;
@@ -290,10 +290,10 @@ void Simulacao :: avancaTempo(){
 }
 
 void Simulacao :: simula(){
-		
+
 	inicializa();
 	avancaTempo();
-	
+
 	while(eventoAtual.getTipo()!='F'){
 		switch (eventoAtual.getTipo()) {
 			case 'I' : trataEventoInicio();break;
@@ -307,7 +307,7 @@ void Simulacao :: simula(){
 		animacao();
 	}
 	trataEventoFim();
-	
+
 }
 
 void Simulacao :: trataEventoInicio(){
@@ -559,16 +559,16 @@ void Simulacao :: trataEventoFim(){
             <<"\t\t   "<<(*it).getsolicitouEnceramento();
 
     }
-	
+
 	mediaTamanhoFila();
 	taxaMediaOcupacaoServidor();
 	tempoMedioFila();
 	tempoMedioSistema();
     contadorEntidades();
-	
+
 	getch();
 	system("CLS");
-	
+
 }
 
 void Simulacao :: setTECAleatorio(){
@@ -728,51 +728,64 @@ void Simulacao :: contadorEntidades(){ 			//AIDIIIII
 
 //ANIMACAO
 void Simulacao :: animacao(){
-
-    char vetAnimaLava[TAM];
+    int vetAnimaLava[TAM];
     char vetAnimaEncera[TAM];
-
+    int k = 0, j = 0;
 
     system("cls");
     gotoxy(9,1);
     cout << "QTD LAVA: " << filaLavaOcupada;
     gotoxy(9,2);
-    cout << "        _________";
+    cout << "        ______________";
     gotoxy(9,3);
     cout << "LAVACAO ";
     if(filaLavaOcupada!=0){
-        cout << "# |8-8) #";
+        cout << "#  _,_,_\\__  #";
+        gotoxy(9,4);
+        cout << "        # '-O---=O-` #";
     }else{
-        cout << "#       #";
+        cout << "#            #";
+        gotoxy(9,4);
+        cout << "        #            #";
     }
     for(int i = 0; i < (filaLavaOcupada-1); i++){
-        vetAnimaLava[i] = 'x';
-        if(vetAnimaLava[i]=='x'){
-            gotoxy(13,(i+5));
-            cout << "\t  |8-8)\n";
-        }
+        vetAnimaLava[i] = 0;
     }
-    gotoxy(28,1);
+    for(int i = 0; i < (filaLavaOcupada-1); i++){
+        gotoxy(13,1+k+(i+7));
+        cout << "       _,_,_\\__   ";
+        gotoxy(13,((k+1)+(i+8)));
+        cout << "\t  '-O---=O-`  ";
+        k++;
+    }
+    gotoxy(32,1);
     cout << "QTD ENCERA: " << filaEnceraOcupada;
-    gotoxy(28,2);
-    cout << "            _________";
-    gotoxy(28,3);
+    gotoxy(32,2);
+    cout << "            ______________";
+    gotoxy(32,3);
     cout << "ENCERAMENTO ";
     if(filaEnceraOcupada!=0){
-        cout << "# |8-8) #";
+        cout << "#  _,_,_\\__  #";
+        gotoxy(32,4);
+        cout << "            # '-O---=O-` #";
     }else{
-        cout << "#       #";
+        cout << "#            #";
+        gotoxy(32,4);
+        cout << "            #            #";
     }
     for(int k = 0; k < (filaEnceraOcupada-1); k++){
         vetAnimaEncera[k] = 'x';
         if(vetAnimaEncera[k]=='x'){
-            gotoxy(28,(k+5));
-            cout << "\t         |8-8)\n";
+            gotoxy(32,1+j+(k+7));
+            cout << "\t\t      _,_,_\\__   ";
+            gotoxy(32,((j+1)+(k+8)));
+            cout << "\t             '-O---=O-`  ";
+            j++;
         }
     }
-        //cout << "<8-8# ";
     pause(tempoPause);
 }
+
 
 void Simulacao :: pause (float delay1) {
 
